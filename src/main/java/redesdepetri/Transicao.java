@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 public class Transicao {
 	private Integer id;
+	public Boolean ativa;
 	private ArrayList<Conexao> conexoesEntrada = new ArrayList<Conexao>();
 	private ArrayList<Conexao> conexoesSaida = new ArrayList<Conexao>();
 
@@ -42,6 +43,14 @@ public class Transicao {
 
 	public void setConexoesSaida(ArrayList<Conexao> conexoesSaida) {
 		this.conexoesSaida = conexoesSaida;
+	}
+
+	public Boolean getAtiva() {
+		return ativa;
+	}
+
+	public void setAtiva(Boolean ativa) {
+		this.ativa = ativa;
 	}
 
 	

@@ -15,6 +15,17 @@ public class RedePetri {
 		this.lugares = lugares;
 	}
 
+	public boolean criarLugar(Integer id) {
+		// verifica se id já existe na lista
+		if (lugares.stream().filter(lugar -> lugar.getId().equals(id)).findFirst().isPresent()) {
+			return false;
+		}
+		
+		Lugar lugar = new Lugar(id, 0);
+		lugares.add(lugar);
+		return true;
+	}
+
 	public boolean criarLugar(Integer id, Integer tokens) {
 		// verifica se id já existe na lista
 	    if (lugares.stream().filter(lugar -> lugar.getId().equals(id)).findFirst().isPresent()) {
@@ -24,6 +35,10 @@ public class RedePetri {
 		Lugar lugar = new Lugar(id, tokens);
 		lugares.add(lugar);
 		return true;
+	}
+	
+	public void executaCiclo() {
+		System.out.println("Executando ciclo...");
 	}
 	
 	public Lugar getLugar(Integer id) {
@@ -75,8 +90,12 @@ public class RedePetri {
 	    	return false;
 	    }
 	    
+	    
 	    Conexao conexao = new Conexao(id, lugar, transicao, peso, ehEntrada, ehArcoInibidor, ehArcoReset);
 		conexoes.add(conexao);
+		
+		transicao.addConexao(conexao);
+		
 	    return true;
 	}
 	
@@ -116,4 +135,23 @@ public class RedePetri {
 		return getLugar(id).getTokens().size();
 	}
 	
+	public boolean getStatusTransicao (int id) {
+		return getTransicao(id).getAtiva();
+	}
+	
+	public void setTransicaoAtiva(int id) {
+		getTransicao(id).setAtiva(true);
+	}
+
+	public void setTransicaoInativa(int id) {
+		getTransicao(id).setAtiva(false);
+	}
+	
+	public boolean isTransicaoAtiva (int id) {
+		return (getStatusTransicao(id) == true);
+	}
+	
+	public void mostraRede() {
+		System.out.println();
+	}
 }
