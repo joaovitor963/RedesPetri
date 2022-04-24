@@ -6,6 +6,7 @@ public class RedePetri {
 	private ArrayList<Lugar> lugares = new ArrayList<Lugar>();
 	private ArrayList<Transicao> transicoes = new ArrayList<Transicao>();
 	private ArrayList<Conexao> conexoes = new ArrayList<Conexao>();
+	private Integer ciclo = 0;
 	
 	public ArrayList<Lugar> getLugares() {
 		return lugares;
@@ -38,7 +39,38 @@ public class RedePetri {
 	}
 	
 	public void executaCiclo() {
-		System.out.println("Executando ciclo...");
+		ciclo++;
+		
+		// cria uma cópia do array de transicoes
+		ArrayList<Transicao> transicoesCopia  = new ArrayList<Transicao>();
+		for(Transicao t : transicoes)
+			transicoesCopia.add(t.clone());
+		
+		// percorre transicoes que estão ativas
+		for (Transicao transicao : transicoesCopia) {
+			if (transicao.getAtiva()) {
+				ArrayList<Token> tokens = null;
+				
+				// percorre as conexoes de entrada das transicoes ativas
+				for (Conexao conexao : getTransicao(transicao.getId()).getConexoesEntrada()) {
+					
+					// cria cópia do array de tokens para evitar problemas de concorrencia
+					tokens = (ArrayList<Token>) conexao.getLugar().getTokens().clone();
+					
+					// percorre a lista de tokens e os remove do lugar
+					for (Token token : tokens) {
+						removeTokenDeLugar(token, conexao.getLugar());
+					}
+				}
+				
+				// percorre as conexoes de saida das transicoes ativas
+				for (Conexao conexao  : getTransicao(transicao.getId()).getConexoesSaida()) {
+					for (Token token : tokens) {
+						insereTokenEmLugar(token, conexao.getLugar());
+					}
+				}
+			}
+		}
 	}
 	
 	public Lugar getLugar(Integer id) {
@@ -121,10 +153,26 @@ public class RedePetri {
 	
 	public void insereTokenEmLugar(Token token, Lugar lugar) {
 		lugar.adicionaToken(token);
+		for (Transicao transicao : transicoes) {
+			for (Conexao conexao : transicao.getConexoesEntrada()) {
+				if (conexao.getLugar().getId() == lugar.getId() && transicao.getConexoesSaida().size() > 0 && lugar.getTokens().size() >= conexao.getPeso() ) {
+					transicao.setAtiva(true);
+				}
+			}
+		}
 	}
 	
 	public void removeTokenDeLugar(Token token, Lugar lugar) {
 		lugar.removeToken(token);
+		if (lugar.getTokens().size() == 0) {
+			for (Transicao transicao : transicoes) {
+				for (Conexao conexao : transicao.getConexoesEntrada()) {
+					if (conexao.getLugar().getId() == lugar.getId()) {
+						transicao.setAtiva(false);
+					}
+				}
+			}
+		}
 	}
 	
 	public ArrayList<Token> getToken(Lugar lugar) {
@@ -152,6 +200,38 @@ public class RedePetri {
 	}
 	
 	public void mostraRede() {
-		System.out.println();
+		mostraCabecalho();
+		mostraCiclo();
+	}
+	
+	public void mostraCabecalho() {
+		System.out.print("Ciclo   ");
+		for (int i = 0; i < lugares.size(); i++) {
+			System.out.print("L" + i + "  ");
+			
+		}
+		for (int i = 0; i < transicoes.size(); i++) {
+			System.out.print("T" + i + "  ");
+			
+		}
+	}
+	public void mostraCiclo() {
+		System.out.println("");
+		System.out.print(padRight(ciclo.toString(), 8));
+		for (Lugar lugar : lugares) {
+			System.out.print(padRight(String.valueOf(lugar.getTokens().size()), 4));
+		}
+		for (Transicao transicao : transicoes) {
+			System.out.print(padRight(String.valueOf(transicao.getAtivaFormatada()), 4));
+		}
+		System.out.println("");
+	}
+	
+	boolean insereCallbackTokenEntrandoLugar(Lugar lugar, /*ponteiroPara Método/Função, */ Token token) {
+		return false;
+	}
+	
+	public static String padRight(String s, int n) {
+	     return String.format("%-" + n + "s", s);  
 	}
 }
