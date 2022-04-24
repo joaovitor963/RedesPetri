@@ -100,4 +100,20 @@ public class RedePetri {
 		return transicoes.stream().filter(transicao -> id.equals(transicao.getId())).findFirst().orElse(null).getConexoesSaida();
 	}
 	
+	public void insereTokenEmLugar(Token token, Lugar lugar) {
+		lugar.adicionaToken(token);
+	}
+	
+	public void removeTokenDeLugar(Token token, Lugar lugar) {
+		lugar.removeToken(token);
+	}
+	
+	public ArrayList<Token> getToken(Lugar lugar) {
+		return lugar.getTokens();
+	}
+	
+	public int quantosTokens(int id) {
+		return getLugar(id).getTokens().size();
+	}
+	
 }

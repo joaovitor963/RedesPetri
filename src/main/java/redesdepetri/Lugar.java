@@ -1,21 +1,30 @@
 package redesdepetri;
 
+import java.util.ArrayList;
+
 public class Lugar {
 	private Integer id;
-	private Integer qtdTokens;
+	private ArrayList<Token> tokens = new ArrayList<Token>();
 
 	public Lugar(Integer id, Integer qtdTokens) {
 		super();
 		this.id = id;
-		this.qtdTokens = qtdTokens;
+
+		for (int i = 0; i < qtdTokens; i++) {
+			tokens.add(new Token());
+		}
 	}
 
-	public Integer getQtdTokens() {
-		return qtdTokens;
+	public void adicionaToken(Token token) {
+		tokens.add(token);
 	}
 
-	public void setQtdTokens(Integer qtdTokens) {
-		this.qtdTokens = qtdTokens;
+	public ArrayList<Token> getTokens() {
+		return tokens;
+	}
+
+	public void setTokens(ArrayList<Token> tokens) {
+		this.tokens = tokens;
 	}
 
 	public Integer getId() {
@@ -24,5 +33,14 @@ public class Lugar {
 
 	public void setId(Integer id) {
 		this.id = id;
+	}
+
+	public Boolean removeToken(Token token) {
+		return tokens.removeIf(t -> t.getId().equals(token.getId()));
+
+	}
+
+	public void clearLugar(Lugar lugar) {
+		tokens.clear();
 	}
 }
