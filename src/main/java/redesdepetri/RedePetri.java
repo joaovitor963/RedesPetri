@@ -27,9 +27,13 @@ public class RedePetri {
 				ArrayList<Conexao> conexoesEntrada = getTransicao(transicao.getId()).getConexoesEntrada();
 				
 				if (conexoesEntrada.size() == 1) {
-					tokens = (ArrayList<Token>) conexoesEntrada.get(0).getLugar().getTokens().clone();
-					for (int i = 0; i < tokensParaRemover; i++) {
-						removeTokenDeLugar(tokens.get(i), conexoesEntrada.get(0).getLugar());
+					if (conexoesEntrada.get(0).getEhArcoReset()) {
+						conexoesEntrada.get(0).getLugar().clearLugar();
+					} else {
+						tokens = (ArrayList<Token>) conexoesEntrada.get(0).getLugar().getTokens().clone();
+						for (int i = 0; i < tokensParaRemover; i++) {
+							removeTokenDeLugar(tokens.get(i), conexoesEntrada.get(0).getLugar());
+						}
 					}
 					tokensParaInserir = tokensParaInserir / conexoesEntrada.get(0).getPeso();
 				} else {
@@ -38,14 +42,19 @@ public class RedePetri {
 						
 						// cria cópia do array de tokens para evitar problemas de concorrencia
 						tokens = (ArrayList<Token>) conexao.getLugar().getTokens().clone();
-						// percorre a lista de tokens e os remove do lugar
-						if (conexao.getPeso() > 1) {
-							for (int i = 0; i < conexao.getPeso() * tokensParaRemover; i++) {
-								removeTokenDeLugar(tokens.get(i), conexao.getLugar());
-							}
-						} else {
-							for (int i = 0; i < tokensParaRemover; i++) {
-								removeTokenDeLugar(tokens.get(i), conexao.getLugar());
+						
+						if (conexao.getEhArcoReset()) {
+							conexao.getLugar().clearLugar();
+						}  else {
+							// percorre a lista de tokens e os remove do lugar
+							if (conexao.getPeso() > 1) {
+								for (int i = 0; i < conexao.getPeso() * tokensParaRemover; i++) {
+									removeTokenDeLugar(tokens.get(i), conexao.getLugar());
+								}
+							} else {
+								for (int i = 0; i < tokensParaRemover; i++) {
+									removeTokenDeLugar(tokens.get(i), conexao.getLugar());
+								}
 							}
 						}
 					}
@@ -53,15 +62,8 @@ public class RedePetri {
 				
 				// percorre as conexoes de saida das transicoes ativas
 				for (Conexao conexao  : getTransicao(transicao.getId()).getConexoesSaida()) {
-					if (conexao.getPeso() > 1) {
-						tokensParaInserir = tokensParaRemover / conexao.getPeso();
-						for (int i = 0; i < tokensParaInserir; i++) {
-							insereTokenEmLugar(tokens.get(i), conexao.getLugar());
-						}
-					} else {
-						for (int i = 0; i < tokensParaInserir; i++) {
-							insereTokenEmLugar(tokens.get(i), conexao.getLugar());
-						}
+					for (int i = 0; i < tokensParaInserir; i++) {
+						insereTokenEmLugar(tokens.get(i), conexao.getLugar());
 					}
 				}
 			}
