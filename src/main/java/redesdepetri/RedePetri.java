@@ -62,15 +62,8 @@ public class RedePetri {
 				
 				// percorre as conexoes de saida das transicoes ativas
 				for (Conexao conexao  : getTransicao(transicao.getId()).getConexoesSaida()) {
-					if (conexao.getPeso() > 1) {
-						tokensParaInserir = tokensParaRemover / conexao.getPeso();
-						for (int i = 0; i < tokensParaInserir; i++) {
-							insereTokenEmLugar(tokens.get(i), conexao.getLugar());
-						}
-					} else {
-						for (int i = 0; i < tokensParaInserir; i++) {
-							insereTokenEmLugar(tokens.get(i), conexao.getLugar());
-						}
+					for (int i = 0; i < tokensParaInserir; i++) {
+						insereTokenEmLugar(tokens.get(i), conexao.getLugar());
 					}
 				}
 			}

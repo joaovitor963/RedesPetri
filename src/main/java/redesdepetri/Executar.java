@@ -294,7 +294,6 @@ public class Executar {
 		Token t1 = new Token();
 		Token t2 = new Token();
 		Token t3 = new Token();
-		Token t4 = new Token();
 		
 		rede.insereTokenEmLugar(t1, rede.getLugar(2));
 		rede.insereTokenEmLugar(t2, rede.getLugar(2));
