@@ -7,6 +7,41 @@ public class RedePetri {
 	private ArrayList<Transicao> transicoes = new ArrayList<Transicao>();
 	private ArrayList<Conexao> conexoes = new ArrayList<Conexao>();
 	private Integer ciclo = 0;
+
+	public void executaCiclo() {
+		ciclo++;
+		
+		// cria uma cópia do array de transicoes
+		ArrayList<Transicao> transicoesCopia  = new ArrayList<Transicao>();
+		for(Transicao t : transicoes)
+			transicoesCopia.add(t.clone());
+		
+		// percorre transicoes que estão ativas
+		for (Transicao transicao : transicoesCopia) {
+			if (transicao.getAtiva()) {
+				ArrayList<Token> tokens = null;
+				
+				// percorre as conexoes de entrada das transicoes ativas
+				for (Conexao conexao : getTransicao(transicao.getId()).getConexoesEntrada()) {
+					
+					// cria cópia do array de tokens para evitar problemas de concorrencia
+					tokens = (ArrayList<Token>) conexao.getLugar().getTokens().clone();
+					
+					// percorre a lista de tokens e os remove do lugar
+					for (int i = 0; i < conexao.getPeso(); i++) {
+						removeTokenDeLugar(tokens.get(i), conexao.getLugar());
+					}
+				}
+				
+				// percorre as conexoes de saida das transicoes ativas
+				for (Conexao conexao  : getTransicao(transicao.getId()).getConexoesSaida()) {
+					for (Token token : tokens) {
+						insereTokenEmLugar(token, conexao.getLugar());
+					}
+				}
+			}
+		}
+	}
 	
 	public ArrayList<Lugar> getLugares() {
 		return lugares;
@@ -38,40 +73,6 @@ public class RedePetri {
 		return true;
 	}
 	
-	public void executaCiclo() {
-		ciclo++;
-		
-		// cria uma cópia do array de transicoes
-		ArrayList<Transicao> transicoesCopia  = new ArrayList<Transicao>();
-		for(Transicao t : transicoes)
-			transicoesCopia.add(t.clone());
-		
-		// percorre transicoes que estão ativas
-		for (Transicao transicao : transicoesCopia) {
-			if (transicao.getAtiva()) {
-				ArrayList<Token> tokens = null;
-				
-				// percorre as conexoes de entrada das transicoes ativas
-				for (Conexao conexao : getTransicao(transicao.getId()).getConexoesEntrada()) {
-					
-					// cria cópia do array de tokens para evitar problemas de concorrencia
-					tokens = (ArrayList<Token>) conexao.getLugar().getTokens().clone();
-					
-					// percorre a lista de tokens e os remove do lugar
-					for (Token token : tokens) {
-						removeTokenDeLugar(token, conexao.getLugar());
-					}
-				}
-				
-				// percorre as conexoes de saida das transicoes ativas
-				for (Conexao conexao  : getTransicao(transicao.getId()).getConexoesSaida()) {
-					for (Token token : tokens) {
-						insereTokenEmLugar(token, conexao.getLugar());
-					}
-				}
-			}
-		}
-	}
 	
 	public Lugar getLugar(Integer id) {
 	    return lugares.stream().filter(lugar -> id.equals(lugar.getId())).findFirst().orElse(null);
@@ -207,7 +208,7 @@ public class RedePetri {
 	public void mostraCabecalho() {
 		System.out.print("Ciclo   ");
 		for (int i = 0; i < lugares.size(); i++) {
-			System.out.print("L" + i + "  ");
+			System.out.print("L" + lugares.get(i).getId() + "  ");
 			
 		}
 		for (int i = 0; i < transicoes.size(); i++) {
