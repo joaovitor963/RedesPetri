@@ -40,7 +40,7 @@ public class Lugar {
 
 	}
 
-	public void clearLugar(Lugar lugar) {
+	public void clearLugar() {
 		tokens.clear();
 	}
 }
