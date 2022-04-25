@@ -21,34 +21,45 @@ public class RedePetri {
 			if (transicao.getAtiva()) {
 				ArrayList<Token> tokens = null;
 				
-				int tokensParaInserir = menorValor( getTransicao(transicao.getId()).getConexoesEntrada());
-				// percorre as conexoes de entrada das transicoes ativas
-				for (Conexao conexao : getTransicao(transicao.getId()).getConexoesEntrada()) {
-					
-					// cria cópia do array de tokens para evitar problemas de concorrencia
-					tokens = (ArrayList<Token>) conexao.getLugar().getTokens().clone();
-					// percorre a lista de tokens e os remove do lugar
-					if (conexao.getPeso() > 1) {
-						for (int i = 0; i < conexao.getPeso(); i++) {
-							removeTokenDeLugar(tokens.get(i), conexao.getLugar());
-						}
-					} else {
-						for (int i = 0; i < tokensParaInserir; i++) {
-							removeTokenDeLugar(tokens.get(i), conexao.getLugar());
+				int tokensParaRemover = menorValor( getTransicao(transicao.getId()).getConexoesEntrada());
+				
+				ArrayList<Conexao> conexoesEntrada = getTransicao(transicao.getId()).getConexoesEntrada();
+				
+				if (conexoesEntrada.size() == 1) {
+					tokens = (ArrayList<Token>) conexoesEntrada.get(0).getLugar().getTokens().clone();
+					for (int i = 0; i < tokensParaRemover; i++) {
+						removeTokenDeLugar(tokens.get(i), conexoesEntrada.get(0).getLugar());
+					}
+				} else {
+					// percorre as conexoes de entrada das transicoes ativas
+					for (Conexao conexao : getTransicao(transicao.getId()).getConexoesEntrada()) {
+						
+						// cria cópia do array de tokens para evitar problemas de concorrencia
+						tokens = (ArrayList<Token>) conexao.getLugar().getTokens().clone();
+						// percorre a lista de tokens e os remove do lugar
+						if (conexao.getPeso() > 1) {
+							for (int i = 0; i < conexao.getPeso() * tokensParaRemover; i++) {
+								removeTokenDeLugar(tokens.get(i), conexao.getLugar());
+							}
+						} else {
+							for (int i = 0; i < tokensParaRemover; i++) {
+								removeTokenDeLugar(tokens.get(i), conexao.getLugar());
+							}
 						}
 					}
 				}
 				
 				// percorre as conexoes de saida das transicoes ativas
 				for (Conexao conexao  : getTransicao(transicao.getId()).getConexoesSaida()) {
-					int tokensInseridos = 0;
-					
-					for (Token token : tokens) {
-						if (tokensInseridos == tokensParaInserir) {
-							break;
-						} else {
-							insereTokenEmLugar(token, conexao.getLugar());
-							tokensInseridos++;
+					int tokensParaInserir = tokensParaRemover;
+					if (conexao.getPeso() > 1) {
+						tokensParaInserir = tokensParaRemover / conexao.getPeso();
+						for (int i = 0; i < tokensParaInserir; i++) {
+							insereTokenEmLugar(tokens.get(i), conexao.getLugar());
+						}
+					} else {
+						for (int i = 0; i < tokensParaInserir; i++) {
+							insereTokenEmLugar(tokens.get(i), conexao.getLugar());
 						}
 					}
 				}
@@ -60,7 +71,12 @@ public class RedePetri {
 		int menorValor = 999999999;
 		for (Conexao conexao : conexoes) {
 			int qtdTokensLugar = conexao.getLugar().getTokens().size();
-			menorValor = qtdTokensLugar < menorValor ? qtdTokensLugar : menorValor;
+			if (conexao.getPeso() > 1 && qtdTokensLugar >= conexao.getPeso()) {
+//				menorValor = qtdTokensLugar - (qtdTokensLugar % conexao.getPeso());
+				menorValor = (int)qtdTokensLugar / conexao.getPeso();
+			} else {
+				menorValor = qtdTokensLugar < menorValor ? qtdTokensLugar : menorValor;
+			}
 		}
 		return menorValor;
 	}
@@ -184,8 +200,10 @@ public class RedePetri {
 					qtdConexoesOk++;
 				}
 			}
-			if(qtdConexoesOk == transicao.getConexoesEntrada().size()) {
+			if (qtdConexoesOk == transicao.getConexoesEntrada().size() && transicao.getConexoesEntrada().size() > 0) {
 				transicao.setAtiva(true);
+			} else {
+				transicao.setAtiva(false);
 			}
 		}
 	}
