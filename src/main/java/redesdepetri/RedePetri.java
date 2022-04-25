@@ -22,7 +22,8 @@ public class RedePetri {
 				ArrayList<Token> tokens = null;
 				
 				int tokensParaRemover = menorValor( getTransicao(transicao.getId()).getConexoesEntrada());
-				
+				int tokensParaInserir = tokensParaRemover;
+
 				ArrayList<Conexao> conexoesEntrada = getTransicao(transicao.getId()).getConexoesEntrada();
 				
 				if (conexoesEntrada.size() == 1) {
@@ -30,6 +31,7 @@ public class RedePetri {
 					for (int i = 0; i < tokensParaRemover; i++) {
 						removeTokenDeLugar(tokens.get(i), conexoesEntrada.get(0).getLugar());
 					}
+					tokensParaInserir = tokensParaInserir / conexoesEntrada.get(0).getPeso();
 				} else {
 					// percorre as conexoes de entrada das transicoes ativas
 					for (Conexao conexao : getTransicao(transicao.getId()).getConexoesEntrada()) {
@@ -51,7 +53,6 @@ public class RedePetri {
 				
 				// percorre as conexoes de saida das transicoes ativas
 				for (Conexao conexao  : getTransicao(transicao.getId()).getConexoesSaida()) {
-					int tokensParaInserir = tokensParaRemover;
 					if (conexao.getPeso() > 1) {
 						tokensParaInserir = tokensParaRemover / conexao.getPeso();
 						for (int i = 0; i < tokensParaInserir; i++) {
@@ -69,15 +70,22 @@ public class RedePetri {
 	
 	public int menorValor(ArrayList<Conexao> conexoes) {
 		int menorValor = 999999999;
-		for (Conexao conexao : conexoes) {
-			int qtdTokensLugar = conexao.getLugar().getTokens().size();
-			if (conexao.getPeso() > 1 && qtdTokensLugar >= conexao.getPeso()) {
-//				menorValor = qtdTokensLugar - (qtdTokensLugar % conexao.getPeso());
-				menorValor = (int)qtdTokensLugar / conexao.getPeso();
-			} else {
-				menorValor = qtdTokensLugar < menorValor ? qtdTokensLugar : menorValor;
+		
+		if (conexoes.size() == 1) {
+			int qtdTokensLugar = conexoes.get(0).getLugar().getTokens().size();
+			menorValor = qtdTokensLugar - (qtdTokensLugar % conexoes.get(0).getPeso());
+		} else {
+			for (Conexao conexao : conexoes) {
+				int qtdTokensLugar = conexao.getLugar().getTokens().size();
+				if (conexao.getPeso() > 1 && qtdTokensLugar >= conexao.getPeso()) {
+					int valor = (int)qtdTokensLugar / conexao.getPeso();
+					menorValor = valor < menorValor ? valor : menorValor;
+				} else {
+					menorValor = qtdTokensLugar < menorValor ? qtdTokensLugar : menorValor;
+				}
 			}
 		}
+		
 		return menorValor;
 	}
 	
