@@ -21,26 +21,48 @@ public class RedePetri {
 			if (transicao.getAtiva()) {
 				ArrayList<Token> tokens = null;
 				
+				int tokensParaInserir = menorValor( getTransicao(transicao.getId()).getConexoesEntrada());
 				// percorre as conexoes de entrada das transicoes ativas
 				for (Conexao conexao : getTransicao(transicao.getId()).getConexoesEntrada()) {
 					
 					// cria cópia do array de tokens para evitar problemas de concorrencia
 					tokens = (ArrayList<Token>) conexao.getLugar().getTokens().clone();
-					
 					// percorre a lista de tokens e os remove do lugar
-					for (int i = 0; i < conexao.getPeso(); i++) {
-						removeTokenDeLugar(tokens.get(i), conexao.getLugar());
+					if (conexao.getPeso() > 1) {
+						for (int i = 0; i < conexao.getPeso(); i++) {
+							removeTokenDeLugar(tokens.get(i), conexao.getLugar());
+						}
+					} else {
+						for (int i = 0; i < tokensParaInserir; i++) {
+							removeTokenDeLugar(tokens.get(i), conexao.getLugar());
+						}
 					}
 				}
 				
 				// percorre as conexoes de saida das transicoes ativas
 				for (Conexao conexao  : getTransicao(transicao.getId()).getConexoesSaida()) {
+					int tokensInseridos = 0;
+					
 					for (Token token : tokens) {
-						insereTokenEmLugar(token, conexao.getLugar());
+						if (tokensInseridos == tokensParaInserir) {
+							break;
+						} else {
+							insereTokenEmLugar(token, conexao.getLugar());
+							tokensInseridos++;
+						}
 					}
 				}
 			}
 		}
+	}
+	
+	public int menorValor(ArrayList<Conexao> conexoes) {
+		int menorValor = 999999999;
+		for (Conexao conexao : conexoes) {
+			int qtdTokensLugar = conexao.getLugar().getTokens().size();
+			menorValor = qtdTokensLugar < menorValor ? qtdTokensLugar : menorValor;
+		}
+		return menorValor;
 	}
 	
 	public ArrayList<Lugar> getLugares() {
@@ -155,10 +177,15 @@ public class RedePetri {
 	public void insereTokenEmLugar(Token token, Lugar lugar) {
 		lugar.adicionaToken(token);
 		for (Transicao transicao : transicoes) {
+			int qtdConexoesOk = 0;
 			for (Conexao conexao : transicao.getConexoesEntrada()) {
-				if (conexao.getLugar().getId() == lugar.getId() && transicao.getConexoesSaida().size() > 0 && lugar.getTokens().size() >= conexao.getPeso() ) {
-					transicao.setAtiva(true);
+				if (transicao.getConexoesSaida().size() > 0 &&
+						conexao.getLugar().getTokens().size() >= conexao.getPeso() ) {
+					qtdConexoesOk++;
 				}
+			}
+			if(qtdConexoesOk == transicao.getConexoesEntrada().size()) {
+				transicao.setAtiva(true);
 			}
 		}
 	}
@@ -208,11 +235,11 @@ public class RedePetri {
 	public void mostraCabecalho() {
 		System.out.print("Ciclo   ");
 		for (int i = 0; i < lugares.size(); i++) {
-			System.out.print("L" + lugares.get(i).getId() + "  ");
+			System.out.print(padRight(String.valueOf("L" + lugares.get(i).getId()), 4));
 			
 		}
 		for (int i = 0; i < transicoes.size(); i++) {
-			System.out.print("T" + i + "  ");
+			System.out.print(padRight(String.valueOf("T" + transicoes.get(i).getId()),4));
 			
 		}
 	}
